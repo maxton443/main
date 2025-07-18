@@ -3,8 +3,9 @@ from telegram.ext import CommandHandler, ContextTypes
 import json
 import os
 from datetime import datetime
+from handlers.ban import load_banned_users  # ব্যান চেক করার জন্য
 
-ADMIN_ID = 7734095649  # <-- এখানে নিজের টেলিগ্রাম আইডি বসাও
+ADMIN_ID = 7734095649  # <-- নিজের টেলিগ্রাম আইডি
 
 # ডেটা সেভ করার ফাংশন
 def save_user(user_data):
@@ -28,9 +29,16 @@ def save_user(user_data):
 # স্টার্ট কমান্ড হ্যান্ডলার
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
+    user_id = str(user.id)
+
+    # ⛔ ব্যান চেক
+    banned_users = load_banned_users()
+    if user_id in banned_users:
+        await update.message.reply_text("🚫 You are banned from using this bot.")
+        return
+
     name = user.full_name
     username = f"@{user.username}" if user.username else "N/A"
-    user_id = user.id
     date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     total = save_user({
